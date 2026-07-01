@@ -1,8 +1,10 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Literal
 from abc import ABC
 
-from .cards import CardType, CardTuple, CardPos
+from .cards import CardType, DeclorationType, CardTuple, CardPos
 
 __all__ = [
     "EventEnvelope",
@@ -14,33 +16,41 @@ __all__ = [
     "TargetRequest",
     "ChallengeRequest",
     "BlockRequest",
+    "ChallengeMultiRequest",
+    "BlockTripleRequest",
     "ChooseRelevantCard",
     "ActionChosen",
     "CardsDeclared",
+    "CardDeclared",
     "TargetChosen",
     "ChallengeDecision",
-    "BlockDecision",
+    "ChosenNotBlock",
+    "ChosenChallengeBlock",
+    "ChosenBlock",
     "RelevantCardChosen",
-    "StartingCards",
     "Eliminated",
     "CardMoved",
     "MovedToMe",
     "MovedFromMe",
     "TokenStolen",
     "ActionPlayed",
+    "PlayerChallenged",
+    "PlayerBlocked",
     "CardRevealed",
-    "UnusableNowCancelled",
+    "ActionCancelled",
     "SkipAmtChanged",
+    "SuddenSiege",
+    "DeckReshuffled",
     "HandFullIgnored",
     "Error"
 ]
 
 @dataclass
 class EventEnvelope:
-    id: int  # unique per logical event
-    event: Event  # the actual event object
+    id: int
+    event: Event
     recipients: set[int] | None
-    is_private: bool  # explicit flag for whether this event is private or not, for ease of use by observers
+    is_private: bool
 
 @dataclass
 class Request(ABC):
@@ -57,16 +67,31 @@ class TargetRequest(Request):
     possible_targets: list[int]
 
 @dataclass
-class ChallengeRequest(Request): pass
+class ChallengeRequest(Request):
+    attacker_id: int
+    claim: CardType
 
 @dataclass
 class BlockRequest(Request):
     attacker_id: int
-    claim: CardType | Literal[2, 3]
+    is_base_claim: bool
+    claim: CardType
+    myhand: list[CardTuple]
+
+@dataclass
+class ChallengeMultiRequest(Request):
+    attacker_id: int
+    claim: Literal["double", "triple"]
+
+@dataclass
+class BlockTripleRequest(Request):
+    attacker_id: int
+    myhand: list[CardTuple]
 
 @dataclass
 class ChooseRelevantCard(Request):
-    source_player: int
+    source_hand: list[CardTuple]
+    is_from_user: bool
 
 @dataclass
 class Response(ABC):
@@ -79,6 +104,10 @@ class ActionChosen(Response):
 @dataclass
 class CardsDeclared(Response):
     indices: list[int]
+
+@dataclass
+class CardDeclared(Response):
+    index: int
     declared_type: CardType
 
 @dataclass
@@ -90,21 +119,21 @@ class ChallengeDecision(Response):
     challenge: bool
 
 @dataclass
-class BlockDecision(Response):
-    block: bool
-    challenge: bool
-    card_pos: CardPos | None
+class ChosenNotBlock(Response): pass
+
+@dataclass
+class ChosenChallengeBlock(Response): pass
+
+@dataclass
+class ChosenBlock(Response):
+    card: CardTuple
     claim: CardType
 
 @dataclass
 class RelevantCardChosen(Response):
-    card_pos: CardPos
+    card: CardTuple
 
 class Event(ABC): pass
-
-@dataclass
-class StartingCards(Event):
-    cards: list[CardTuple]
 
 @dataclass
 class Eliminated(Event):
@@ -134,22 +163,41 @@ class TokenStolen(Event):
 class ActionPlayed(Event):
     player_id: int
     cards: list[CardTuple]
-    declared_type: CardType
+    declared_type: DeclorationType
     target_id: int | None
 
 @dataclass
+class PlayerChallenged(Event):
+    challenger_id: int
+    challenged_id: int
+    cards: list[CardTuple]
+    truthtelling: bool
+
+@dataclass
+class PlayerBlocked(Event):
+    blocker_id: int
+    blocked_id: int
+    block_claim: CardType
+
+@dataclass
 class CardRevealed(Event):
-    pos: CardPos
     card: CardTuple
 
 @dataclass
-class UnusableNowCancelled(Event):
+class ActionCancelled(Event):
     player_id: int
 
 @dataclass
 class SkipAmtChanged(Event):
     player_id: int
     new_amt: int
+
+@dataclass
+class SuddenSiege(Event): pass
+
+@dataclass
+class DeckReshuffled(Event):
+    new_deck: list[CardTuple]
 
 @dataclass
 class HandFullIgnored(Event):

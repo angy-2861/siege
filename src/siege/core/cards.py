@@ -1,5 +1,6 @@
-from typing import Literal, Callable, Union
-from abc import ABC, abstractmethod
+from __future__ import annotations
+
+from typing import Literal, Union
 
 from typing import TYPE_CHECKING
 
@@ -10,6 +11,7 @@ if TYPE_CHECKING:
 __all__ = [
     "CardCategory",
     "CardType",
+    "DeclorationType",
     "DeckType",
     "CardTuple",
     "ValidPile",
@@ -35,6 +37,7 @@ CardType = Literal[
     "Jester",
     "Scourge"
 ]
+DeclorationType = CardType | Literal[False]
 DeckType = Literal[
     "Classic",
     "Normal",
@@ -93,9 +96,9 @@ decks: dict[DeckType, set[CardType]] = {
 }
 
 class Card:
-    def __init__(self, ctype: CardType, pos: CardPos) -> None:
+    def __init__(self, ctype: CardType, /, pos: CardPos, revealed: bool = False) -> None:
         self.type: CardType = ctype
-        self.revealed = False
+        self.revealed = revealed
         self.pos = pos
 
     def to_tuple(self) -> CardTuple:
@@ -103,9 +106,16 @@ class Card:
     
     @classmethod
     def from_tuple(cls, tuple: CardTuple) -> Card:
-        c = Card(tuple[0], tuple[2])
-        c.revealed = tuple[1]
-        return c
+        return Card(tuple[0], tuple[2], tuple[1])
+    
+    def __eq__(self, value: object) -> bool:
+        if not isinstance(value, Card):
+            return NotImplemented
+        return value.type == self.type and self.pos == value.pos and self.revealed == value.revealed
     
     def __repr__(self) -> str:
-        return f"[{card_symbols[self.type]} ({'!' if self.revealed else '?'})]"
+        return f"Card({self.type!r}, pos={self.pos}, revealed={self.revealed})"
+        
+    def __str__(self) -> str:
+        status = '!' if self.revealed else '?'
+        return f"[{card_symbols[self.type]} ({status})]"

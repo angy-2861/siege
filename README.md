@@ -1,16 +1,14 @@
 # ***Siege***
 
----
-
 ## **What is Siege?**
 
 Siege is a coup-inspired, action-filled, strategic card game where you have to lie and steal each other’s tokens to become the richest kingdom.
 
 ## **Setup**
 
-- Shuffle the deck, and deal out 2 cards and 3 tokens to each player.
-- Players take turns, starting with the player to the left of the dealer and proceeding counterclockwise.
-- When the deck runs out, the dealer must reshuffle the used pile into the deck before anyone makes any moves.
+- The deck is shuffled. 2 cards and 3 tokens are dealt out to each player..
+- Players take turns, starting with the host of the room and proceeding counterclockwise.
+- When the deck runs out, the used pile is reshuffled and placed back in the deck before completing the next action. The revealed state of the reshuffled cards isn't changed.
 
 ## **On Your Turn…**
 
@@ -28,6 +26,7 @@ Siege is a coup-inspired, action-filled, strategic card game where you have to l
 - Attack cards can be placed down on your turn.
   - All of them negatively affect others and/or positively affect you.
 - Defense cards can be placed to block an attack card that is used on you.
+  - They can also be placed on other defense cards that threaten to block your attack/defense card.
 - Wild cards can be used as attack or defense cards.
 
 ### **Attack**
@@ -59,10 +58,10 @@ Siege is a coup-inspired, action-filled, strategic card game where you have to l
 
 ### **Defense**
 
-- Guard: Use this card to block any action, even blocking. You can only block actions that negatively impact you.
+- Guard: Use this card to block any action, even blocking.
   - Identifier: Gd
   - \# of this card: 4x
-- Reflector: This card can only be used against a card that negatively impacts the user. Upon use, mirror the declared effect back to the attacker. The attacker’s effect is also cancelled on use.
+- Reflector: Upon use, mirror the declared effect back to the attacker. The attacker’s effect is also cancelled on use.
   - Identifier: Rf
   - \# of this card: 4x
 

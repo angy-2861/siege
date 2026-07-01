@@ -1,6 +1,10 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
 from abc import ABC, abstractmethod
 
-from ..core.events import EventEnvelope, Request, Response
+if TYPE_CHECKING:
+    from ..core.events import EventEnvelope, Request, Response
 
 __all__ = [
     "API",
@@ -8,12 +12,14 @@ __all__ = [
 ]
 
 class API(ABC):
-    @abstractmethod
-    def handle_input(self, input: Request) -> Response: ...
+    host_id: int
 
     @abstractmethod
-    def handle_event(self, event: EventEnvelope) -> None: ...
+    def handle_input(self, input: "Request") -> "Response": ...
+
+    @abstractmethod
+    def handle_event(self, event: "EventEnvelope") -> None: ...
 
 class Observer(ABC):
     @abstractmethod
-    def handle_event(self, event: EventEnvelope) -> None: ...
+    def handle_event(self, event: "EventEnvelope") -> None: ...

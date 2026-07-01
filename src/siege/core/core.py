@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import Callable
 from enum import Enum
@@ -9,23 +11,26 @@ from typing import TYPE_CHECKING
 from ..api.base import API
 
 if TYPE_CHECKING:
-    from cards import Card, CardType, CardPos
+    from cards import Card, CardType, CardTuple
 
 __all__ = [
+    "set_id_offset",
     "generate_id",
     "Player",
     "Phase",
     "BlockStackItem"
 ]
 
-used_ids: set[int] = set()
+_next_id = 0
+
+def set_id_offset(offset: int):
+    global _next_id
+    _next_id = offset
 
 def generate_id() -> int:
-    new_id = r.randint(1, 999_999)
-    while new_id in used_ids:
-        new_id += 1
-    used_ids.add(new_id)
-    return new_id
+    global _next_id
+    _next_id += 1
+    return _next_id
 
 class Player:
     def __init__(self, api: "API", player_id: int | None = None) -> None:
@@ -34,23 +39,44 @@ class Player:
         self.skip_amt: int = 0
         self.api: "API" = api
         self.id = player_id or generate_id()
+        self.api.host_id = self.id
 
     def reset(self) -> None:
         self.hand = []
         self.tokens = 3
         self.is_skipped = False
+        self.api.host_id = self.id
         api_reset = getattr(self.api, "reset", None)
         if callable(api_reset):
             api_reset()
 
+    def __eq__(self, value: object) -> bool:
+        if isinstance(value, Player):
+            return value.id == self.id
+        if isinstance(value, int):
+            return value == self.id
+        return NotImplemented
+
+    def __hash__(self):
+        return hash(self.id)
+
 class Phase(Enum):
-    ACTION = "action" # Player chooses to play or draw
-    DECLARE = "declare" # Player declares cards they are playing and their claim
-    TARGET = "target" # Player chooses target for card effect if necessary
-    CHALLENGE = "challenge" # Players choose whether to challenge the claim or not, if applicable
-    BLOCK = "block" # Players choose whether to block the action or not, if applicable
-    RESOLUTION = "resolution" # Action effects are resolved, players lose tokens as necessary, and elimination is checked for
-    GAME_OVER = "game_over" # Game is over, winner is announced, and no more actions can be taken
+    """Determines the current phase of the game."""
+
+    ACTION = "action"
+    """Player chooses to play or draw"""
+    DECLARE = "declare"
+    """Player declares cards they are playing and their claim"""
+    TARGET = "target"
+    """Player chooses target for card effect if necessary"""
+    BLOCK = "block"
+    """Players choose whether to block the action or not, if applicable"""
+    CHALLENGE = "challenge"
+    """Players choose whether to challenge the claim or not, if applicable"""
+    RESOLUTION = "resolution"
+    """Action effects are resolved, players lose tokens as necessary, and elimination is checked for"""
+    GAME_OVER = "game_over"
+    """Game is over, winner is announced, and no more actions can be taken"""
 
     # Extra note:
     # when a player plays 2 or 3 cards, there is no target phase, and the challenge phase happens immediately after declaration.
@@ -62,5 +88,5 @@ class Phase(Enum):
 class BlockStackItem:
     blocker_id: int
     target_id: int
-    claim: CardType
-    pos: CardPos
+    claim: "CardType"
+    card: "CardTuple"
